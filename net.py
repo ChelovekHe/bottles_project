@@ -7,14 +7,15 @@ K.set_image_dim_ordering('th')
 from keras.optimizers import SGD
 import img_to_nparr
 
-def net (X_test):
+
+def net (X_test, mode=1):
 
     img_width, img_height = 64, 64
 
     train_data_dir = 'datas2/train'
     validation_data_dir = 'datas2/validation'
-    nb_train_samples = 10800
-    nb_validation_samples = 24
+    nb_train_samples = 18000
+    nb_validation_samples = 40
     nb_epoch = 5
 
 
@@ -37,7 +38,7 @@ def net (X_test):
     model.add(Dense(512))
     model.add(Activation('relu'))
     model.add(Dropout(0.5))
-    model.add(Dense(6))
+    model.add(Dense(10))
     model.add(Activation('softmax'))
 
     sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
@@ -59,18 +60,28 @@ def net (X_test):
             target_size=(img_width, img_height),
             batch_size=32)
 
-    model.fit_generator(
-            train_generator,
-            samples_per_epoch=nb_train_samples,
-            nb_epoch=nb_epoch,
-            validation_data=validation_generator,
-            nb_val_samples=nb_validation_samples)
+    if mode == 0:
+        model.fit_generator(
+                train_generator,
+                samples_per_epoch=nb_train_samples,
+                nb_epoch=nb_epoch,
+                validation_data=validation_generator,
+                nb_val_samples=nb_validation_samples)
 
-    #model.load_weights('weights.h5')
+        model.save_weights('weights1.h5')
+    else:
+        model.load_weights('weights1.h5')
 
+    list_of_list_of_class = []
+    list_of_list_of_proba = []
+    
     for ind in range(len(X_test)):
-    	print(model.predict_classes(X_test[ind]))
-    	print(model.predict_proba(X_test[ind]))
+        list_of_class = model.predict_classes(X_test[ind], verbose = 0)
+        list_of_proba = model.predict_proba(X_test[ind], verbose = 0)
+        list_of_list_of_class.append(list_of_class)
+        list_of_list_of_proba.append(list_of_proba)
+    
+    return list_of_list_of_class, list_of_list_of_proba
 
 if __name__ == '__main__':
 	X_test = img_to_nparr.img_to_nparr('/home/ruslan/datas2/validation/5')
